@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>Flipbot - Search</title>
+
+		<!-- Bootstrap CSS -->
+		<link href="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" rel="stylesheet">
+		<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet">
+
+		<!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+		<!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+		<!--[if lt IE 9]>
+			<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+			<script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+		<![endif]-->
+	</head>
+	<body>
+		<div class="container">
+			
+			<div class="row">
+				<div class="col-md-12">
+					<h1>Flipbot</h1>
+					<p>Analyze a search keyword on flipkart.com. Displays search suggestions, popular products and top results.</p>
+
+					<div class="row">
+						<div class="col-md-5">
+							<form action="" method="GET" role="form" id="analyze-form">
+								<div class="input-group">
+									<input type="text" class="form-control" id="keyword">
+									<span class="input-group-btn"><button type="submit" class="btn btn-success" id="action-analyze"><i class="fa fa-binoculars"></i> Analyze Keyword</button></span>
+								</div>
+							</form>
+						</div>
+
+					</div>
+					
+					<hr>
+
+					<div id="loading" style="display:none;">
+						<div style="font-size: 1.2em;">
+							<span class="fa-stack">
+							  <i class="fa fa-cog fa-2x fa-spin" style="line-height:inherit;"></i>
+							</span>
+							Analyzing keyword "<span class="data-keyword"></span>"...
+						</div>
+						<br>
+						<p>Please be patient. This can take around 10 - 30 seconds.</p>
+					</div>
+					<div id="error" style="display:none;">
+						<div style="font-size: 1.2em;">
+							<span class="fa-stack">
+							  <i class="fa fa-warning fa-2x" style="line-height:inherit;"></i>
+							</span>
+							An error occured.
+						</div>
+						<br>
+						<p>Please try again after a while - the server might be too busy.</p>
+					</div>
+
+					<div id="results" style="display:none;">
+						<h2>Keyword "<span class="data-keyword">&nbsp;</span>"</h2>
+
+						<h4>Search Analysis</h4>
+						<table class="table">
+							<tbody>
+								<tr>
+									<td>Suggestions</td>
+									<td class="data-suggestions">&nbsp;</td>
+								</tr>
+								<tr>
+									<td>Popular Products</td>
+									<td class="data-popular">&nbsp;</td>
+								</tr>
+							</tbody>
+						</table>
+
+						<h4>Top Products in Result</h4>
+						<div class="row" id="results-table">
+							
+						</div>
+
+						<div class="row" style="display:none;">
+							<div class="col-md-4 col-sm-6 col-xs-12" id="product-frame">
+								<table class="table table-bordered">
+									<tbody>
+										<tr>
+											<td colspan="2" class="data-image text-center"><img src="#" alt="No image found" style="height:125px; max-width:300px;"></td>
+										</tr>
+										<tr>
+											<td colspan="2" class="data-title" style="height: 60px;"></td>
+										</tr>
+										<tr>
+											<td>Category</td>
+											<td class="data-category"></td>
+										</tr>
+										<tr>
+											<td>Price</td>
+											<td class="data-price"></td>
+										</tr>
+										<tr>
+											<td>Original Price</td>
+											<td class="data-discount"></td>
+										</tr>
+										<tr>
+											<td>Rating/Reviews</td>
+											<td class="data-rating"></td>
+										</tr>
+										<tr>
+											<td colspan="2" class="data-link"><a href="#" target="_blank" class="btn btn-block btn-default">View on Flipkart</a></td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+						</div>
+					</div>
+
+				</div>
+			</div>
+
+
+		</div>		
+
+		<!-- jQuery -->
+		<script src="http://code.jquery.com/jquery.js"></script>
+		<!-- Bootstrap JavaScript -->
+		<script src="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+
+		<script>
+			$(function() {
+				var req = null;
+				$('#keyword').focus();
+
+				$('#analyze-form').submit(function(event) {
+					event.preventDefault();
+
+					var keyword = $('#keyword').val();
+					$('#keyword').val('');
+
+					if(keyword.trim() == ''){
+						$('#error').hide();
+						$('#loading').hide();
+
+						if(req && req.readyState != 4){
+				            req.abort();
+				        }
+						return false;
+					}
+
+					$('#keyword').blur();
+
+					$('.data-keyword').html(keyword);
+
+					$('#error').hide();
+					$('#results').hide();
+					$('#loading').show();
+
+					if(req && req.readyState != 4){
+			            req.abort();
+			        }
+
+					req = $.ajax({
+						url: '/search/'+keyword,
+						type: 'GET',
+						dataType: 'json',
+						complete: function(xhr, textStatus) {							$('#loading').hide();
+						},
+						success: function(data, textStatus, xhr) {
+							if(data.result == 'success'){
+								$('.data-suggestions').html(data.suggestions.join('<br>'));
+
+								var popular = '';
+								data.popular.forEach(function(item){
+									popular+= (item.title || '') + ' (' + (item.price || '') + ')<br>';
+								});
+
+								$('.data-popular').html(popular);
+
+								$('#results-table').html('');
+
+								data.products.forEach(function(product){
+									var clone = $('#product-frame').clone();
+
+									if(product.image)
+										clone.find('.data-image img').attr('src', product.image);
+									else
+										clone.find('.data-image img').remove();
+
+									clone.find('.data-title').html(product.title || '');
+									clone.find('.data-category').html(product.category || '');
+									clone.find('.data-price').html(product.price || '');
+									clone.find('.data-discount').html(product.discount || '');
+									clone.find('.data-rating').html( (product.rating || '') + ' ' + (product.reviews || '') );
+									clone.find('.data-link a').attr('href', product.url || '');
+
+									clone.appendTo($('#results-table'));
+								});
+
+								$('#results').show();
+							}else{
+								$('#error').show();
+							}
+						},
+						error: function(xhr, textStatus, errorThrown) {
+							$('#error').show();
+						}
+					});
+					
+					return false;
+				});
+			});
+		</script>
+
+	</body>
+</html>
