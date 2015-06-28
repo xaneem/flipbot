@@ -1,4 +1,4 @@
-# Flipbot - Flipkart keyword analysis and top products
+# Flipbot - Keyword Analysis for Flipkart
 
 Analyze a search keyword on [Flipkart.com]('http://www.flipkart.com'). Shows the keyword suggestions, popular products shown during search, and the top products in the search results page.
 
