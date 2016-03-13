@@ -14,8 +14,8 @@ var save_products = fs.pathJoin(pwd, 'products.dat');
 var keyword = casper.cli.args[0];
 
 //Open homepage
-casper.start('http://www.flipkart.com/', function() {
-	this.echo('Homepage loaded.');
+casper.start('http://www.flipkart.com/search', function() {
+	this.echo('Page loaded.');
 
 	if(!this.exists('#fk-header-search-form #fk-top-search-box')){
     	this.echo('Search form not found!');
