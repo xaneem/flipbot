@@ -12,5 +12,5 @@ A hosted version of this tool is available on [ClusterDev](http://cloud.clusterd
 ## Behind the scenes
 This uses CasperJS which opens the website using the headless browser PhantomJS, and writes the results to a file. The frontend is powered by Node.js/Express. It requests a new search, reads the generated file and displays results.
 
-##License
+## License
 MIT License
